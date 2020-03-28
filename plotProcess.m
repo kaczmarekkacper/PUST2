@@ -15,7 +15,7 @@ function  plotProcess(u, y, z, plotTitle)
     ylabel('u');
     subplot(3, 1, 3);
     stairs(1:k, z, 'c');
-    legend('Wejœcie procesu');
+    legend('Zak³ócenie procesu');
     xlabel('k');
     ylabel('z');
 end
