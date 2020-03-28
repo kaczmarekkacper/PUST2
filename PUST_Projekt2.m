@@ -11,6 +11,9 @@ global Zpp;
 global T;
 global k; %iloœæ próbek symulacji
 
+global s;
+global sz;
+
 Upp = 0;
 Ypp = 0;
 Zpp = 0;
@@ -405,7 +408,7 @@ if figures
     figure;
     subplot(2, 1, 1);
     stairs(1:k, y, 'b');
-    title('OdpowiedŸ sterowania DMC przed znormalizowaniem');
+    title('OdpowiedŸ DMC na zmianê sterowania przed znormalizowaniem');
     xlabel('k');
     ylabel('y');
     legend('Wyjœcie procesu', 'Location', 'south');
@@ -425,11 +428,13 @@ end
 yuDMC(1:end-tau) = y(tau+1:end); yuDMC(end-tau:end) = y(end-tau:end);
 uDMC(1:end-tau) = u(tau+1:end); uDMC(end-tau:end) = u(end-tau:end);
 
+s = yuDMC;
+
 if figures
     figure;
     subplot(2, 1, 1);
     stairs(1:k, yuDMC, 'b');
-    title('OdpowiedŸ sterowania DMC po znormalizowaniu');
+    title('OdpowiedŸ DMC na zmianê sterowania po znormalizowaniu');
     xlabel('k');
     ylabel('y');
     legend('Wyjœcie procesu', 'Location', 'south');
@@ -463,7 +468,7 @@ if figures
     figure;
     subplot(2, 1, 1);
     stairs(1:k, y, 'b');
-    title('OdpowiedŸ zak³ócenia DMC przed znormalizowaniem');
+    title('OdpowiedŸ DMC na zmianê zak³ócenia przed znormalizowaniem');
     xlabel('k');
     ylabel('y');
     legend('Wyjœcie procesu', 'Location', 'south');
@@ -483,11 +488,13 @@ end
 yzDMC(1:end-tau) = y(tau+1:end); yzDMC(end-tau:end) = y(end-tau:end);
 zDMC(1:end-tau) = z(tau+1:end); zDMC(end-tau:end) = z(end-tau:end);
 
+sz = yzDMC;
+
 if figures
     figure;
     subplot(2, 1, 1);
     stairs(1:k, yzDMC, 'b');
-    title('OdpowiedŸ zak³ócenia DMC po znormalizowaniu');
+    title('OdpowiedŸ DMC na zmianê zak³ócenia po znormalizowaniu');
     xlabel('k');
     ylabel('y');
     legend('Wyjœcie procesu', 'Location', 'south');
@@ -515,6 +522,33 @@ end
 %     wyjsciowych procesu oraz wartosci wskaznika E).
 mkdir('results/4');
 
+%% symulacja 
+D = 250;
+Dz = 250;
+N = D;
+Nu = N;
+lambda = 20;
+yzad = 1;
+
+z = zeros(k, 1);
+
+% symulacja DMC
+[u, y] = DMC(D, Dz, N, Nu, lambda, yzad, k, Upp, Ypp, z);
+
+yzad = yzad*ones(k,1);
+
+E = (y-yzad)*(y-yzad)';
+
+DMCtitle = sprintf('DMC D = %g Dz = %g N = %g Nu = %g lambda = %g E = %g', D, Dz, N, Nu, lambda, E);
+DMCtitle = strrep(DMCtitle,'.',',');
+if figures
+    plotProcess(u, y, z, DMCtitle);
+end
+subplot(3,1,1);
+hold on;
+plot(1:k, yzad, 'r-');
+legend('Wyjœcie procesu', 'Wartoœæ zadana');
+hold off;
 
 %% 5. Za³ozyc, ze oprócz zmian sygna³u wartosci zadanej nastepuje skokowa zmiana sygna³u
 %     zak³ócenia z wartosci 0 do 1 (zmiana ta ma miejsce po osiagnieciu przez proces wartosci
@@ -523,10 +557,67 @@ mkdir('results/4');
 %     jest tego pomiaru.
 mkdir('results/5');
 
+%% symulacja 
+D = 250;
+Dz = 250;
+N = D;
+Nu = N;
+lambda = 20;
+yzad = 1;
+
+z = [zeros(150, 1); ones(100,1)];
+
+
+% symulacja DMC
+[u, y] = DMC(D, Dz, N, Nu, lambda, yzad, k, Upp, Ypp, z);
+
+yzad = yzad*ones(k,1);
+
+E = (y-yzad)*(y-yzad)';
+
+DMCtitle = sprintf('DMC D = %g Dz = %g N = %g Nu = %g lambda = %g E = %g', D, Dz, N, Nu, lambda, E);
+DMCtitle = strrep(DMCtitle,'.',',');
+if figures
+    plotProcess(u, y, z, DMCtitle);
+end
+subplot(3,1,1);
+hold on;
+plot(1:k, yzad, 'r-');
+legend('Wyjœcie procesu', 'Wartoœæ zadana');
+hold off;
 
 %% 6. Sprawdzic dzia³anie algorytmu przy zak³óceniu zmiennym sinusoidalnie. Zamiescic wybrane
 %     wyniki symulacji przy uwzglednieniu i nie uwzglednieniu mierzonego zak³ócenia w algorytmie.
 mkdir('results/6');
+
+%% symulacja 
+D = 250;
+Dz = 250;
+N = D;
+Nu = N;
+lambda = 20;
+yzad = 1;
+
+
+z = sin(-4*pi:0.1:4*pi-0.2);
+
+% symulacja DMC
+[u, y] = DMC(D, Dz, N, Nu, lambda, yzad, k, Upp, Ypp, z);
+
+yzad = yzad*ones(k,1);
+
+E = (y-yzad)*(y-yzad)';
+
+DMCtitle = sprintf('DMC D = %g Dz = %g N = %g Nu = %g lambda = %g E = %g', D, Dz, N, Nu, lambda, E);
+DMCtitle = strrep(DMCtitle,'.',',');
+if figures
+    plotProcess(u, y, z, DMCtitle);
+end
+subplot(3,1,1);
+hold on;
+plot(1:k, yzad, 'r-');
+legend('Wyjœcie procesu', 'Wartoœæ zadana');
+hold off;
 
 
 %% 7. Dla dobranych parametrów algorytmu zbadac jego odpornosc przy b³edach pomiaru

@@ -1,40 +1,34 @@
 classdef DMCRegWithNoise < handle
-    %DMCReg Summary of this class goes here
-    %   Detailed explanation goes here
-    
     properties
+        s
+        sz
+        D
+        Dz
+        N
+        Nu
         LAMBDA
+        psi
         M
         Mp
+        Mpz
         K
-        psi
-        N
-        Gz
-        D
-        Nu
-        u_prev
         yzad
+        u_prev
+        z_prev
         deltaup
         deltazp
-        Mpz
-        z_prev
-        Dz
     end
     
     methods
-        function obj = DMCRegWithNoise(Gz, D, N, Nu, lambda)
-            %DM Construct an instance of this class
-            %   Detailed explanation goes here
-            obj.N = N;
-            obj.Gz = Gz;
+        function obj = DMCRegWithNoise(s, sz, D, Dz, N, Nu, lambda)
+            obj.s = s;
+            obj.sz = sz;
             obj.D = D;
+            obj.Dz = Dz;
+            obj.N = N;
             obj.Nu = Nu;
-            s = step(Gz, D*Gz.Ts);
-            sz = s(:,:,2);
-            s = s(:,:,1);
-            obj.psi = eye(N);
             obj.LAMBDA = eye(Nu)*lambda;
-            obj.Dz = D-150/Gz.Ts;
+            obj.psi = eye(N);
 
             % Wyznaczanie macierzy M
             obj.M = zeros(N, Nu);
@@ -71,9 +65,9 @@ classdef DMCRegWithNoise < handle
             obj.K=(obj.M'*obj.psi*obj.M+obj.LAMBDA)^(-1)*obj.M'*obj.psi;
         end
         
-        function [] = reset(obj,u_p, Fdp)
+        function [] = reset(obj, u_p, z_p)
             obj.u_prev = u_p;
-            obj.z_prev = Fdp;
+            obj.z_prev = z_p;
             obj.deltaup=zeros(1,obj.D-1)';
             obj.deltazp=zeros(1,obj.Dz)';
         end
@@ -84,8 +78,6 @@ classdef DMCRegWithNoise < handle
         end
         
         function u = countValue(obj,y, z)
-            %count actual value of output.
-            %   Detailed explanation goes here
             
             % aktualizacja wektora aktualnej wartoœci wyjœcia
             yk=ones(obj.N,1)*y;
@@ -103,9 +95,8 @@ classdef DMCRegWithNoise < handle
             obj.z_prev = z;
         
             % aktualizacja poprzednich zmian sterowania
-            obj.deltaup=[deltauk obj.deltaup(1:end-1)']';
+            obj.deltaup=[deltauk(1) obj.deltaup(1:end-1)']';
             obj.deltazp=[deltazk obj.deltazp(1:end-1)']';
         end
     end
 end
-
