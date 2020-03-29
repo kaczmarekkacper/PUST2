@@ -341,7 +341,7 @@ if figures
 end
 
 if saving
-    matlab2tikz('results/2/OdpowiedzSkokoweZaklocenia.tex');
+    matlab2tikz('results/2/OdpowiedziSkokoweZaklocenie.tex');
 end
 
 %% Charakterystyka statyczna
@@ -368,18 +368,19 @@ ustat = ustat * ones(1, size(ustat, 1));
 zstat = ones(size(zstat, 2), 1) * zstat ;
 
 if figures
+    figure;
     surface(ustat,zstat,ystat);
     view(3);
     xlabel('u');
     ylabel('z');
     zlabel('y');
     title('Charakterystyka statyczna');
-    legend('Charakterystyka statyczna');
+    %legend('Charakterystyka statyczna');
 end
 
-if saving
-    matlab2tikz('results/2/CharakterystykaStatyczna.tex');
-end
+%if saving
+%    matlab2tikz('results/2/CharakterystykaStatyczna.tex');
+%end
 %% 3. Wyznaczyc odpowiedzi skokowe obu torów wykorzystywane w algorytmie DMC, tzn.
 %     zestaw liczb s1, s2, . . . oraz sz1, sz2, . . . (przy skoku jednostkowym, odpowiednio sygna³u
 %     sterujacego i zak³ócajacego: od chwili k = 0 w³acznie sygna³ wymuszenia ma wartosc 1,
@@ -433,14 +434,14 @@ s = yuDMC;
 if figures
     figure;
     subplot(2, 1, 1);
-    stairs(1:k, yuDMC, 'b');
+    stairs(0:k, [ 0; yuDMC], 'b');
     title('OdpowiedŸ DMC na zmianê sterowania po znormalizowaniu');
     xlabel('k');
     ylabel('y');
     legend('Wyjœcie procesu', 'Location', 'south');
     hold on;
     subplot(2, 1, 2);
-    stairs(1:k, uDMC, 'm');
+    stairs(0:k, [1; uDMC], 'm');
     xlabel('k');
     ylabel('u');
     legend('Wejœcie procesu', 'Location', 'south');
@@ -493,14 +494,14 @@ sz = yzDMC;
 if figures
     figure;
     subplot(2, 1, 1);
-    stairs(1:k, yzDMC, 'b');
+    stairs(0:k,[0; yzDMC], 'b');
     title('OdpowiedŸ DMC na zmianê zak³ócenia po znormalizowaniu');
     xlabel('k');
     ylabel('y');
     legend('Wyjœcie procesu', 'Location', 'south');
     hold on;
     subplot(2, 1, 2);
-    stairs(1:k, zDMC, 'c');
+    stairs(0:k,[1; zDMC], 'c');
     xlabel('k');
     ylabel('z');
     legend('Zak³ócenie procesu', 'Location', 'south');
