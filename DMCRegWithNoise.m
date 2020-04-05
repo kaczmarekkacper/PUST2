@@ -98,5 +98,22 @@ classdef DMCRegWithNoise < handle
             obj.deltaup=[deltauk(1) obj.deltaup(1:end-1)']';
             obj.deltazp=[deltazk obj.deltazp(1:end-1)']';
         end
+        function u = countWithoutNoise(obj,y)
+            % aktualizacja wektora aktualnej wartoœci wyjœcia
+            yk=ones(obj.N,1)*y;
+
+            % wyliczenie nowego wektora odpowiedzi swobodnej
+            y0=yk+obj.Mp*obj.deltaup;
+
+            % wyliczenie wektora zmian sterowania
+            deltauk=obj.K*(obj.yzad-y0);
+
+            % prawo regulacji
+            u=obj.u_prev+deltauk(1);
+            obj.u_prev = u;
+
+            % aktualizacja poprzednich zmian sterowania
+            obj.deltaup=[deltauk(1) obj.deltaup(1:end-1)']';
+        end
     end
 end

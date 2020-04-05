@@ -1,5 +1,6 @@
 %% 0. Definicje makr 
 
+addpath 'C:\Users\Iga\Documents\MATLAB\src'
 clear;
 close all;
 more off;
@@ -20,6 +21,8 @@ Zpp = 0;
 
 T = 0.5;
 k = 250;
+
+global noise ; 
 
 figures = 1; % czy wyœwietlaæ wykresy
 saving = 1; % czy zapisywaæ dane
@@ -525,10 +528,10 @@ mkdir('results/4');
 
 %% symulacja 
 D = 250;
-Dz = 250;
-N = D;
-Nu = N;
-lambda = 20;
+Dz = 80;
+N = 6;
+Nu = 6;
+lambda = 10;
 yzad = 1;
 
 z = zeros(k, 1);
@@ -538,18 +541,26 @@ z = zeros(k, 1);
 
 yzad = yzad*ones(k,1);
 
-E = (y-yzad)*(y-yzad)';
-
-DMCtitle = sprintf('DMC D = %g Dz = %g N = %g Nu = %g lambda = %g E = %g', D, Dz, N, Nu, lambda, E);
-DMCtitle = strrep(DMCtitle,'.',',');
+E = (y-yzad')*(y-yzad')';
+% 
+%DMCtitle = sprintf('DMC D=%.2f;N=%.2f;Nu=%.2f;lambda=%.2f;E=%.2f', D, N, Nu, lambda, E);
+%
+%DMCtitle = 'DMC without noise'
+DMCtitle = sprintf('Regulator DMC o parametrach D=%d N=%d Nu=%d lambda=%.2f E=%.2f',D,N,Nu,lambda,E); 
+DMCtitle = strrep(DMCtitle,'.',','); 
 if figures
     plotProcess(u, y, z, DMCtitle);
 end
 subplot(3,1,1);
 hold on;
 plot(1:k, yzad, 'r-');
-legend('Wyjœcie procesu', 'Wartoœæ zadana');
+axis([0 k 0 max(y)+0.2])
+legend('Wyjœcie procesu', 'Wartoœæ zadana','Location','southeast');
 hold off;
+filename = sprintf('results/4/DMC_N%dNu%dlambda%.2fE%.2f',N,Nu,lambda,E)
+filename = strrep(filename,'.',','); 
+matlab2tikz(strcat(filename,'.tex')); 
+
 
 %% 5. Za³ozyc, ze oprócz zmian sygna³u wartosci zadanej nastepuje skokowa zmiana sygna³u
 %     zak³ócenia z wartosci 0 do 1 (zmiana ta ma miejsce po osiagnieciu przez proces wartosci
@@ -560,32 +571,48 @@ mkdir('results/5');
 
 %% symulacja 
 D = 250;
-Dz = 250;
-N = D;
-Nu = N;
-lambda = 20;
+Dz = 10;
+N = 10;
+Nu = 5;
+lambda = 10;
 yzad = 1;
 
 z = [zeros(150, 1); ones(100,1)];
 
-
+compare = 1; 
 % symulacja DMC
 [u, y] = DMC(D, Dz, N, Nu, lambda, yzad, k, Upp, Ypp, z);
-
+[uW, yW] = DMCwithoutNoise(D,Dz,N,Nu,lambda,yzad,k,Upp,Ypp,z); 
 yzad = yzad*ones(k,1);
 
-E = (y-yzad)*(y-yzad)';
+E = 0 ; 
+E = (y-yzad')*(y-yzad')';
+E2 = (yW-yzad')*(yW-yzad')';
 
-DMCtitle = sprintf('DMC D = %g Dz = %g N = %g Nu = %g lambda = %g E = %g', D, Dz, N, Nu, lambda, E);
+DMCtitle = sprintf('DMC z parametrami D = %d Dz = %d N = %d Nu = %d lambda = %.2f E = %.2f', D, Dz, N, Nu, lambda, E);
+if compare 
+    DMCtitle = 'Porównanie regulatora z uwzglêdnieniem i bez uwzglêdnienia wp³ywu zak³óceñ'; 
+end
+
 DMCtitle = strrep(DMCtitle,'.',',');
 if figures
     plotProcess(u, y, z, DMCtitle);
 end
 subplot(3,1,1);
 hold on;
-plot(1:k, yzad, 'r-');
-legend('Wyjœcie procesu', 'Wartoœæ zadana');
+if compare 
+    stairs(1:k, yW , 'g') ;
+end
+plot(1:k, yzad, 'r-'); 
+axis([0 k 0 max(yW)+0.2])
+legend('Wyjscie procesu', 'Wartoœæ zadana');
+if compare 
+    legend('Z zakloceniami','Bez zaklocen', 'Wartoœæ zadana');
+end
 hold off;
+filename = sprintf('results/5/Porownanie_N%dNu%dlambda%.2fE%.2fE2%.2f',N,Nu,lambda,E,E2);
+filename = strrep(filename,'.',','); 
+matlab2tikz(strcat(filename,'.tex')); 
 
 %% 6. Sprawdzic dzia³anie algorytmu przy zak³óceniu zmiennym sinusoidalnie. Zamiescic wybrane
 %     wyniki symulacji przy uwzglednieniu i nie uwzglednieniu mierzonego zak³ócenia w algorytmie.

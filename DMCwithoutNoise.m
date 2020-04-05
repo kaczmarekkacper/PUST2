@@ -1,9 +1,8 @@
-function [u, y, z] = DMC(D, Dz, N, Nu, lambda, yzad, sim_time, u_prev, y_prev, z)
+function [u, y] = DMCwithoutNoise(D, Dz, N, Nu, lambda, yzad, sim_time, u_prev, y_prev, z)
 
 % Definicja sta³ych
 global s;
-global sz;
-global noise ; 
+global sz; 
 %alokacja wektorów
 y = ones(1,sim_time)*y_prev;
 u = ones(1,sim_time)*u_prev;
@@ -20,7 +19,7 @@ for i=1:sim_time
     if i > 5
         y(i) = symulacja_obiektu7y(u(i-4),u(i-5), z(i-1), z(i-2),y(i-1),y(i-2));
     end
-        u(i) = dmc.countValue(y(i), z(i));
+        u(i) = dmc.countWithoutNoise(y(i));
 end
 
 end

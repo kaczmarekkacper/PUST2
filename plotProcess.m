@@ -1,7 +1,8 @@
 function  plotProcess(u, y, z, plotTitle)
 
     global k;
-    figure;
+    figure('Renderer', 'painters', 'Position', [10 10 650 600])
+    %figure
     subplot(3, 1, 1);
     stairs(1:k, y, 'b');
     title(plotTitle);
