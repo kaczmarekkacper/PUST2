@@ -1,6 +1,6 @@
 %% 0. Definicje makr 
 
-addpath 'C:\Users\Iga\Documents\MATLAB\src'
+% addpath 'C:\Users\Iga\Documents\MATLAB\src'
 clear;
 close all;
 more off;
@@ -24,8 +24,8 @@ k = 250;
 
 global noise ; 
 
-figures = 1; % czy wyœwietlaæ wykresy
-saving = 1; % czy zapisywaæ dane
+figures = 0; % czy wyœwietlaæ wykresy
+saving = 0; % czy zapisywaæ dane
 
 %% 1. Sprawdzic poprawnosc podanego punku pracy.
 mkdir('results/1');
@@ -597,59 +597,207 @@ end
 DMCtitle = strrep(DMCtitle,'.',',');
 if figures
     plotProcess(u, y, z, DMCtitle);
+    subplot(3,1,1);
+    hold on;
+    if compare 
+        stairs(1:k, yW , 'g') ;
+    end
+    plot(1:k, yzad, 'r-'); 
+    axis([0 k 0 max(yW)+0.2])
+    legend('Wyjscie procesu', 'Wartoœæ zadana');
+    if compare 
+        legend('Z zakloceniami','Bez zaklocen', 'Wartoœæ zadana');
+    end
+    hold off;
 end
-subplot(3,1,1);
-hold on;
-if compare 
-    stairs(1:k, yW , 'g') ;
+if saving
+    filename = sprintf('results/5/Porownanie_N%dNu%dlambda%.2fE%.2fE2%.2f',N,Nu,lambda,E,E2);
+    filename = strrep(filename,'.',','); 
+    matlab2tikz(strcat(filename,'.tex')); 
 end
-plot(1:k, yzad, 'r-'); 
-axis([0 k 0 max(yW)+0.2])
-legend('Wyjscie procesu', 'Wartoœæ zadana');
-if compare 
-    legend('Z zakloceniami','Bez zaklocen', 'Wartoœæ zadana');
-end
-hold off;
-filename = sprintf('results/5/Porownanie_N%dNu%dlambda%.2fE%.2fE2%.2f',N,Nu,lambda,E,E2);
-filename = strrep(filename,'.',','); 
-matlab2tikz(strcat(filename,'.tex')); 
 
 %% 6. Sprawdzic dzia³anie algorytmu przy zak³óceniu zmiennym sinusoidalnie. Zamiescic wybrane
 %     wyniki symulacji przy uwzglednieniu i nie uwzglednieniu mierzonego zak³ócenia w algorytmie.
 mkdir('results/6');
 
-%% symulacja 
+% symulacja 
 D = 250;
-Dz = 250;
-N = D;
-Nu = N;
-lambda = 20;
+Dz = 70;
+N = 10;
+Nu = 5;
+lambda = 10;
 yzad = 1;
 
-
 z = sin(-4*pi:0.1:4*pi-0.2);
-
 % symulacja DMC
 [u, y] = DMC(D, Dz, N, Nu, lambda, yzad, k, Upp, Ypp, z);
-
+[uW, yW] = DMCwithoutNoise(D,Dz,N,Nu,lambda,yzad,k,Upp,Ypp,z); 
 yzad = yzad*ones(k,1);
+ 
+E = (y-yzad')*(y-yzad')';
+E2 = (yW-yzad')*(yW-yzad')';
 
-E = (y-yzad)*(y-yzad)';
-
-DMCtitle = sprintf('DMC D = %g Dz = %g N = %g Nu = %g lambda = %g E = %g', D, Dz, N, Nu, lambda, E);
+% DMCtitle = sprintf('DMC D = %g Dz = %g N = %g Nu = %g lambda = %g E = %g', D, Dz, N, Nu, lambda, E);
+DMCtitle = ('Zak³ócenie sinusoidalne - przy uwzglêdnieniu i nie uwzglêdnieniu mierzonego zak³ócenia');
 DMCtitle = strrep(DMCtitle,'.',',');
 if figures
     plotProcess(u, y, z, DMCtitle);
+    subplot(3,1,1);
+    hold on;
+    stairs(1:k, yW , 'g') ;
+    plot(1:k, yzad, 'r-'); 
+    axis([0 k min(yW)-0.2 max(yW)+0.2])
+    legend('Z zak³óceniami','Bez zak³óceñ', 'Wartoœæ zadana');
+    hold off;
 end
-subplot(3,1,1);
-hold on;
-plot(1:k, yzad, 'r-');
-legend('Wyjœcie procesu', 'Wartoœæ zadana');
-hold off;
 
+if saving
+    filename = sprintf('results/6/Zaklocenie_Sinusoidalne');
+    filename = strrep(filename,'.',','); 
+    matlab2tikz(strcat(filename,'.tex')); 
+end
 
 %% 7. Dla dobranych parametrów algorytmu zbadac jego odpornosc przy b³edach pomiaru
 %     sygna³u zak³ócenia (szum pomiarowy). Rozwazyc kilka wartosci b³edów. Zamiescic
 %     wybrane wyniki symulacji.
 mkdir('results/7');
+
+% symulacja 
+D = 250;
+Dz = 70;
+N = 10;
+Nu = 5;
+lambda = 10;
+yzad = 1;
+
+% Szum
+noisePower = 0.001;
+z = wgn(250, 1, noisePower, 'linear');
+% Symulacja
+[u, y] = DMC(D, Dz, N, Nu, lambda, yzad, k, Upp, Ypp, z);
+[uW, yW] = DMCwithoutNoise(D,Dz,N,Nu,lambda,yzad,k,Upp,Ypp,z); 
+yzad = yzad*ones(k,1);
+% Bledy
+E = (y-yzad')*(y-yzad')';
+E2 = (yW-yzad')*(yW-yzad')';
+
+DMCtitle = sprintf('Szum pomiarowy w zak³óceniu, moc szumu %g W', noisePower);
+DMCtitle = strrep(DMCtitle,'.',',');
+if figures
+    plotProcess(u, y, z, DMCtitle);
+    subplot(3,1,1);
+    hold on;
+    stairs(1:k, yW , 'g') ;
+    plot(1:k, yzad, 'r-'); 
+    axis([0 k min(yW)-0.2 max(yW)+0.2])
+    legend('Z zak³óceniami','Bez zak³óceñ', 'Wartoœæ zadana');
+    hold off;
+    subplot(3, 1, 3);
+    axis([0 250 -1 1])
+end
+
+if saving
+    filename = sprintf('results/7/Szum_%g', noisePower);
+    filename = strrep(filename,'.',','); 
+    matlab2tikz(strcat(filename,'.tex')); 
+end
+
+% Szum
+noisePower = 0.01;
+yzad = 1;
+z = wgn(250, 1, noisePower, 'linear');
+% Symulacja
+[u, y] = DMC(D, Dz, N, Nu, lambda, yzad, k, Upp, Ypp, z);
+[uW, yW] = DMCwithoutNoise(D,Dz,N,Nu,lambda,yzad,k,Upp,Ypp,z); 
+yzad = yzad*ones(k,1);
+% Bledy
+E = (y-yzad')*(y-yzad')';
+E2 = (yW-yzad')*(yW-yzad')';
+
+DMCtitle = sprintf('Szum pomiarowy w zak³óceniu, moc szumu %g W', noisePower);
+DMCtitle = strrep(DMCtitle,'.',',');
+if figures
+    plotProcess(u, y, z, DMCtitle);
+    subplot(3,1,1);
+    hold on;
+    stairs(1:k, yW , 'g') ;
+    plot(1:k, yzad, 'r-'); 
+    axis([0 k min(yW)-0.2 max(yW)+0.2])
+    legend('Z zak³óceniami','Bez zak³óceñ', 'Wartoœæ zadana');
+    hold off;
+    subplot(3, 1, 3);
+    axis([0 250 -1 1])
+end
+
+if saving
+    filename = sprintf('results/7/Szum_%g', noisePower);
+    filename = strrep(filename,'.',','); 
+    matlab2tikz(strcat(filename,'.tex')); 
+end
+
+% Szum
+noisePower = 0.004;
+yzad = 1;
+z = wgn(250, 1, noisePower, 'linear');
+% Symulacja
+[u, y] = DMC(D, Dz, N, Nu, lambda, yzad, k, Upp, Ypp, z);
+[uW, yW] = DMCwithoutNoise(D,Dz,N,Nu,lambda,yzad,k,Upp,Ypp,z); 
+yzad = yzad*ones(k,1);
+% Bledy
+E = (y-yzad')*(y-yzad')';
+E2 = (yW-yzad')*(yW-yzad')';
+
+DMCtitle = sprintf('Szum pomiarowy w zak³óceniu, moc szumu %g W', noisePower);
+DMCtitle = strrep(DMCtitle,'.',',');
+if figures
+    plotProcess(u, y, z, DMCtitle);
+    subplot(3,1,1);
+    hold on;
+    stairs(1:k, yW , 'g') ;
+    plot(1:k, yzad, 'r-'); 
+    axis([0 k min(yW)-0.2 max(yW)+0.2])
+    legend('Z zak³óceniami','Bez zak³óceñ', 'Wartoœæ zadana');
+    hold off;
+    subplot(3, 1, 3);
+    axis([0 250 -1 1])
+end
+
+if saving
+    filename = sprintf('results/7/Szum_%g', noisePower);
+    filename = strrep(filename,'.',','); 
+    matlab2tikz(strcat(filename,'.tex')); 
+end
+
+% Szum
+noisePower = 0.1;
+yzad = 1;
+z = wgn(250, 1, noisePower, 'linear');
+% Symulacja
+[u, y] = DMC(D, Dz, N, Nu, lambda, yzad, k, Upp, Ypp, z);
+[uW, yW] = DMCwithoutNoise(D,Dz,N,Nu,lambda,yzad,k,Upp,Ypp,z); 
+yzad = yzad*ones(k,1);
+% Bledy
+E = (y-yzad')*(y-yzad')';
+E2 = (yW-yzad')*(yW-yzad')';
+
+DMCtitle = sprintf('Szum pomiarowy w zak³óceniu, moc szumu %g W', noisePower);
+DMCtitle = strrep(DMCtitle,'.',',');
+if figures
+    plotProcess(u, y, z, DMCtitle);
+    subplot(3,1,1);
+    hold on;
+    stairs(1:k, yW , 'g') ;
+    plot(1:k, yzad, 'r-'); 
+    axis([0 k min(yW)-0.2 max(yW)+0.2])
+    legend('Z zak³óceniami','Bez zak³óceñ', 'Wartoœæ zadana');
+    hold off;
+    subplot(3, 1, 3);
+    axis([0 250 -1 1])
+end
+
+if saving
+    filename = sprintf('results/7/Szum_%g', noisePower);
+    filename = strrep(filename,'.',','); 
+    matlab2tikz(strcat(filename,'.tex')); 
+end
 
