@@ -6,7 +6,7 @@ function  plotProcess(u, y, z, plotTitle)
     subplot(3, 1, 1);
     stairs(1:k, y, 'b');
     title(plotTitle);
-    legend('Wyjœcie procesu');
+    legend('Wyjœcie procesu', 'location', 'southeast');
     xlabel('k');
     ylabel('y');
     subplot(3, 1, 2);
